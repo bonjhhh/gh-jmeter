@@ -5,14 +5,12 @@ This project is designed to perform load testing using Apache JMeter for both UI
 ## Project Structure
 
 - **.github/workflows/load-test.yml**: GitHub Actions workflow configuration for running load tests.
-- **jmeter/tests/ui-load-test.jmx**: JMeter test plan for UI load testing.
-- **jmeter/tests/api-load-test.jmx**: JMeter test plan for API load testing.
-- **jmeter/data/test-data.csv**: Test data used by JMeter tests.
+- **jmeter/tests/testPlan01..jmx**: JMeter test plan for UI load testing.
 - **jmeter/results/.gitkeep**: Keeps the results directory tracked by Git.
 - **scripts/run-tests.sh**: Shell script to execute JMeter tests.
-- **scripts/report-to-teams.js**: JavaScript file to send test results to Microsoft Teams.
+- **scripts/report-to-slack.js**: JavaScript file to send test results to Slack.
 - **config/jmeter.properties**: Configuration settings for JMeter.
-- **config/teams-webhook.json**: Configuration for Microsoft Teams webhook.
+- **config/slack-webhook.json**: Configuration for Slack webhook.
 - **.gitignore**: Specifies files and directories to be ignored by Git.
 
 ## Setup Instructions
@@ -26,8 +24,8 @@ This project is designed to perform load testing using Apache JMeter for both UI
 2. **Configure JMeter**: 
    Update the `config/jmeter.properties` file with your desired settings.
 
-3. **Set Up Microsoft Teams Webhook**: 
-   Create a webhook in your Microsoft Teams channel and update the `config/teams-webhook.json` file with the webhook URL.
+3. **Set Up Slack Webhook**: 
+   Create a webhook in your Microsoft Teams channel and update the `config/slack-webhook.json` file with the webhook URL.
 
 4. **Run Tests Locally**: 
    You can run the tests locally using the `scripts/run-tests.sh` script.
@@ -37,10 +35,9 @@ This project is designed to perform load testing using Apache JMeter for both UI
 
 ## Reporting
 
-Test results will be sent to the specified Microsoft Teams channel after each test run. Ensure that the webhook is correctly configured to receive messages.
+Test results will be sent to the specified Slack channel after each test run. Ensure that the webhook is correctly configured to receive messages.
 
 ## Usage Guidelines
 
 - Modify the JMeter test plans in the `jmeter/tests` directory to suit your testing needs.
-- Update the test data in `jmeter/data/test-data.csv` as necessary.
 - Review the results in the `jmeter/results` directory after each test run.
