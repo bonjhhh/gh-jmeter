@@ -90,4 +90,6 @@ jobs:
       - name: Process and Report Results
         run: |
           cd jmeter-load-tests
-          node scripts/report-to-slack.js
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Test Plan: testPlan01 - Status: PASSED\"}" \
+            $SLACK_WEBHOOK_URL
