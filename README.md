@@ -31,6 +31,8 @@ This project is designed to perform load testing using Apache JMeter for both UI
 
 Test results will be sent to the specified Slack channel after each test run. Ensure that the webhook is correctly configured to receive messages.
 
+![alt text](image-4.png)
+
 
 ## Usage Guidelines
 
