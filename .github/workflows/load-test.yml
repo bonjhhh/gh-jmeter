@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
   # push:
   #   branches:
-  #     - master
+  #     - main
   # pull_request:
   #   branches:
-  #     - master
+  #     - main
 
 jobs:
   load-test:
@@ -32,21 +32,37 @@ jobs:
           # Check JMeter version
           ./apache-jmeter-5.6.3/bin/jmeter --version
 
+      - name: Verify Test Plan exists
+        run: |
+          # Check if file exists and print directory structure
+          ls -la
+          echo "------"
+          ls -la jmeter-load-tests/jmeter/tests/ || echo "Directory not found"
+          echo "------"
+          if [ -f "jmeter-load-tests/jmeter/tests/testPlan01.jmx" ]; then
+            echo "Test plan found!"
+          else
+            echo "Test plan NOT found!"
+            find . -name "testPlan01.jmx" || echo "Could not find test plan anywhere"
+          fi
+
       - name: Run UI Load Test and Generate Report
         run: |
-          # Create directories if they don't exist
-          mkdir -p jmeter/results
+          # Create results directory if it doesn't exist
+          mkdir -p jmeter-load-tests/jmeter/results
           
-          # Run JMeter with explicit path
-          ./apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/tests/testPlan01.jmx -l jmeter/results/testPlan01-results.jtl -e -o jmeter/results/Test_Plan_01_A
+          # Run JMeter with path to your test plan
+          ./apache-jmeter-5.6.3/bin/jmeter -n -t jmeter-load-tests/jmeter/tests/testPlan01.jmx \
+            -l jmeter-load-tests/jmeter/results/testPlan01-results.jtl \
+            -e -o jmeter-load-tests/jmeter/results/Test_Plan_01_A
 
       - name: Upload JMeter Results as Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: jmeter-results
           path: |
-            jmeter/results/testPlan01-results.jtl
-            jmeter/results/Test_Plan_01_A/**
+            jmeter-load-tests/jmeter/results/testPlan01-results.jtl
+            jmeter-load-tests/jmeter/results/Test_Plan_01_A/**
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -59,7 +75,7 @@ jobs:
 
       - name: Process and Report Results
         run: |
-          # Create summary data
+          cd jmeter-load-tests
           node scripts/report-to-slack.js
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
