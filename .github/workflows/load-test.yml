@@ -82,8 +82,15 @@ jobs:
           jq --arg summary "$SUMMARY" '.messageFormat.blocks[3].text.text |= gsub("{{SUMMARY}}"; $summary)' jmeter-load-tests/config/slack-webhook.json > payload.json
           cat payload.json
 
+      - name: Debug Slack Payload
+        run: |
+          echo "Payload content:"
+          cat payload.json
+
       - name: Send Slack Notification
         run: |
           curl -X POST -H 'Content-type: application/json' \
             --data @payload.json \
             $SLACK_WEBHOOK_URL
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
