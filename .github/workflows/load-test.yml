@@ -71,7 +71,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          npm install axios xml2js dotenv
+          npm install axios dotenv
 
       - name: Process and Report Results
         run: |
