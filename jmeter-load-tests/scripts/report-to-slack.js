@@ -8,7 +8,11 @@ const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 if (!webhookUrl) {
   console.error('Error: SLACK_WEBHOOK_URL environment variable is not set');
   process.exit(1);
-}
+} 
+
+// Log webhook URL pattern (safely)
+console.log(`Webhook URL length: ${webhookUrl.length}`);
+console.log(`Webhook URL pattern: https://hooks.slack.com/services/T***/B***/****`);
 
 // Load Slack configuration
 let slackConfig;
