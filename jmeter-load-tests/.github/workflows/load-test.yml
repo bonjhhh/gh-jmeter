@@ -1,0 +1,68 @@
+name: Load Test Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jmeter
+
+      - name: Run UI Load Test and Generate Report
+        run: |
+          jmeter -n -t jmeter/tests/testPlan01.jmx -l jmeter/results/testPlan01-results.jtl -e -o jmeter/results/Test_Plan_01_A
+
+      - name: Upload JMeter Results as Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: jmeter-results
+          path: |
+            jmeter/results/testPlan01-results.jtl
+            jmeter/results/Test_Plan_01_A/**
+
+      - name: Report Results to Slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "JMeter Load Test Results",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🧪 JMeter Load Test Results"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Repository:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n*Commit:* ${{ github.sha }}\n*Test completed at:* ${{ github.event.repository.updated_at }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "View detailed test results in the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|GitHub Actions run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

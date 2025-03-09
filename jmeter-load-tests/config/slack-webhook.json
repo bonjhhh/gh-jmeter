@@ -1,0 +1,43 @@
+{
+  "username": "JMeter Bot",
+  "icon_emoji": ":robot_face:",
+  "channel": "#load-test-results",
+  "messageFormat": {
+    "text": "JMeter Load Test Results",
+    "blocks": [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "🧪 JMeter Load Test Results"
+        }
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Results of the latest load tests."
+        }
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Test Summary*\n{{SUMMARY}}"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "Run from GitHub Actions workflow"
+          }
+        ]
+      }
+    ]
+  }
+}

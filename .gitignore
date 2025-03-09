@@ -1,0 +1,33 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.*
+
+# JMeter specific files
+jmeter/results/*.jtl
+jmeter/results/Test_Plan_*/**
+jmeter/results/*.log
+jmeter/results/*.csv
+jmeter/results/*.xml
+jmeter.log
+*.hprof
+*.log
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Keep empty directories with .gitkeep
+!jmeter/results/.gitkeep
+!jmeter/tests/.gitkeep
