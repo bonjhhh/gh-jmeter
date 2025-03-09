@@ -64,6 +64,12 @@ jobs:
             jmeter-load-tests/jmeter/results/testPlan01-results.jtl
             jmeter-load-tests/jmeter/results/Test_Plan_01_A/**
 
+      - name: Test Slack Webhook Directly
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"Testing webhook from curl"}' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
+            
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
