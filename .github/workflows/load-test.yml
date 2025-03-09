@@ -72,24 +72,18 @@ jobs:
             jmeter-load-tests/jmeter/results/testPlan01-results.jtl
             jmeter-load-tests/jmeter/results/Test_Plan_01_A/**
 
-      - name: Test Slack Webhook Directly
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Prepare Slack Payload
+        id: prepare_payload
+        run: |
+          SUMMARY="Test Plan: testPlan01 - Status: PASSED"
+          jq --arg summary "$SUMMARY" '.messageFormat.blocks[3].text.text |= gsub("{{SUMMARY}}"; $summary)' jmeter-load-tests/config/slack-webhook.json > payload.json
+          cat payload.json
+
+      - name: Send Slack Notification
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"Testing webhook from curl"}' \
-            $SLACK_WEBHOOK_URL
-            
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      - name: Install Dependencies
-        run: |
-          npm install axios dotenv
-
-      - name: Process and Report Results
-        run: |
-          cd jmeter-load-tests
-          curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"Test Plan: testPlan01 - Status: PASSED\"}" \
+            --data @payload.json \
             $SLACK_WEBHOOK_URL
