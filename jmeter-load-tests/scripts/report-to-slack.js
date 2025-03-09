@@ -4,7 +4,8 @@ const axios = require('axios');
 const path = require('path');
 
 // Get Slack webhook URL from environment variable
-const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+const webhookUrl = 'https://hooks.slack.com/services/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'
+// process.env.SLACK_WEBHOOK_URL;
 if (!webhookUrl) {
   console.error('Error: SLACK_WEBHOOK_URL environment variable is not set');
   process.exit(1);
