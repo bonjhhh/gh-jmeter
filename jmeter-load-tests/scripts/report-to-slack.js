@@ -22,15 +22,11 @@ try {
 }
 
 // Function to send message to Slack
-async function sendToSlack(metrics, runInfo) {
+async function sendToSlack(testPlanName, isPassed, runInfo) {
   try {
-    // Create summary text
-    const summaryText = `• Total Requests: ${metrics.totalRequests}
-• Failed Requests: ${metrics.failedRequests}
-• Success Rate: ${metrics.successRate}%
-• Average Response Time: ${metrics.avgResponseTime}ms
-• 90th Percentile: ${metrics.percentile90}ms
-• Test Duration: ${metrics.duration}s`;
+    // Create a simple status message
+    const status = isPassed ? "✅ PASSED" : "❌ FAILED";
+    const summaryText = `• Test Plan: ${testPlanName}\n• Status: ${status}`;
 
     // Start with the message format from config
     const payload = {
@@ -55,7 +51,7 @@ async function sendToSlack(metrics, runInfo) {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `<${runInfo.serverUrl}/${runInfo.repository}/actions/runs/${runInfo.runId}|View detailed results on GitHub>`
+          text: `<${runInfo.serverUrl}/${runInfo.repository}/actions/runs/${runInfo.runId}|View test job on GitHub>`
         }
       });
     }
@@ -68,64 +64,26 @@ async function sendToSlack(metrics, runInfo) {
   }
 }
 
-// Function to parse JTL file and extract metrics
-async function parseJtlResults(jtlContent) {
+// Simplified function to check if test passed
+async function checkTestResults(jtlContent) {
   const parser = new xml2js.Parser();
   try {
     const result = await parser.parseStringPromise(jtlContent);
     const samples = result.testResults.httpSample || [];
     
-    // Calculate metrics
-    const totalRequests = samples.length;
-    let failedRequests = 0;
-    let totalResponseTime = 0;
-    let minTime = Number.MAX_VALUE;
-    let maxTime = 0;
-    const responseTimes = [];
-    const startTime = samples.length > 0 ? parseInt(samples[0].$.ts || 0, 10) : 0;
-    const endTime = samples.length > 0 ? parseInt(samples[samples.length - 1].$.ts || 0, 10) : 0;
-    const duration = Math.round((endTime - startTime) / 1000);
+    // Check if any requests failed
+    const failedRequests = samples.filter(sample => sample.$.success === 'false').length;
     
-    samples.forEach(sample => {
-      const success = sample.$.success === 'true';
-      const time = parseInt(sample.$.time || 0, 10);
-      
-      if (!success) failedRequests++;
-      totalResponseTime += time;
-      minTime = Math.min(minTime, time);
-      maxTime = Math.max(maxTime, time);
-      responseTimes.push(time);
-    });
-    
-    // Calculate percentiles
-    responseTimes.sort((a, b) => a - b);
-    const p90Index = Math.floor(responseTimes.length * 0.9);
-    const percentile90 = responseTimes[p90Index] || 0;
-    
-    const avgResponseTime = totalRequests > 0 ? Math.round(totalResponseTime / totalRequests) : 0;
-    const successRate = totalRequests > 0 ? ((totalRequests - failedRequests) / totalRequests * 100).toFixed(2) : '0.00';
-    
+    // Test passes if there are no failed requests
     return {
-      totalRequests,
-      failedRequests,
-      successRate,
-      avgResponseTime,
-      minTime: minTime === Number.MAX_VALUE ? 0 : minTime,
-      maxTime,
-      percentile90,
-      duration
+      testPassed: failedRequests === 0,
+      totalSamples: samples.length
     };
   } catch (error) {
     console.error('Error parsing JTL results:', error);
     return {
-      totalRequests: 0,
-      failedRequests: 0,
-      successRate: '0.00',
-      avgResponseTime: 0,
-      minTime: 0,
-      maxTime: 0,
-      percentile90: 0,
-      duration: 0
+      testPassed: false,
+      totalSamples: 0
     };
   }
 }
@@ -139,20 +97,24 @@ async function reportResults() {
     serverUrl: process.env.GITHUB_SERVER_URL || 'https://github.com'
   } : null;
   
+  // Get test plan name from environment or use default
+  const testPlanName = process.env.TEST_PLAN_NAME || "testPlan01";
   const resultsFilePath = path.resolve(__dirname, '../jmeter/results/testPlan01-results.jtl');
   
   try {
     if (!fs.existsSync(resultsFilePath)) {
       console.error(`Error: Results file not found at ${resultsFilePath}`);
+      await sendToSlack(testPlanName, false, runInfo); // Report failure if results file not found
       process.exit(1);
     }
     
     const jtlContent = fs.readFileSync(resultsFilePath, 'utf8');
-    const metrics = await parseJtlResults(jtlContent);
+    const { testPassed } = await checkTestResults(jtlContent);
     
-    await sendToSlack(metrics, runInfo);
+    await sendToSlack(testPlanName, testPassed, runInfo);
   } catch (error) {
     console.error('Error in report processing:', error);
+    await sendToSlack(testPlanName, false, runInfo); // Report failure on any error
     process.exit(1);
   }
 }
