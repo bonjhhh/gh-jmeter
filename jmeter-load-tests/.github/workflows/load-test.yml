@@ -1,0 +1,70 @@
+name: Load Test Workflow
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - master
+  # pull_request:
+  #   branches:
+  #     - master
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Install JMeter 5.6.3
+        run: |
+          # Download and extract JMeter 5.6.3
+          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          tar -xzf apache-jmeter-5.6.3.tgz
+          
+          # Check JMeter version
+          ./apache-jmeter-5.6.3/bin/jmeter --version
+
+      - name: Run UI Load Test and Generate Report
+        run: |
+          # Create directories if they don't exist
+          mkdir -p jmeter/results
+          
+          # Run JMeter with explicit path
+          ./apache-jmeter-5.6.3/bin/jmeter -n -t jmeter/tests/testPlan01.jmx -l jmeter/results/testPlan01-results.jtl -e -o jmeter/results/Test_Plan_01_A
+
+      - name: Upload JMeter Results as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-results
+          path: |
+            jmeter/results/testPlan01-results.jtl
+            jmeter/results/Test_Plan_01_A/**
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Dependencies
+        run: |
+          npm install axios xml2js dotenv
+
+      - name: Process and Report Results
+        run: |
+          # Create summary data
+          node scripts/report-to-slack.js
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
