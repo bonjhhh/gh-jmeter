@@ -10,8 +10,24 @@ on:
   #     - main
 
 jobs:
+  check-webhook:
+    runs-on: ubuntu-latest
+
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: Send Test Message to Slack Webhook
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"Testing webhook from GitHub Actions"}' \
+            $SLACK_WEBHOOK_URL
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   load-test:
     runs-on: ubuntu-latest
+    needs: check-webhook
 
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -72,53 +88,20 @@ jobs:
             jmeter-load-tests/jmeter/results/testPlan01-results.jtl
             jmeter-load-tests/jmeter/results/Test_Plan_01_A/**
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
-      # Prepare Slack Payload for Success Notification
-      - name: Prepare Slack Payload for Success
-        id: prepare_payload_success
-        run: |
-          SUMMARY="Test Plan: testPlan01 - Status: PASSED"
-          jq --arg summary "$SUMMARY" '.messageFormat.blocks[3].text.text |= gsub("{{SUMMARY}}"; $summary)' jmeter-load-tests/config/slack-webhook.json > payload_success.json
-          cat payload_success.json
-
-      # Prepare Slack Payload for Failure Notification (in case of failure)
-      - name: Prepare Slack Payload for Failure
-        id: prepare_payload_failure
-        run: |
-          SUMMARY="Test Plan: testPlan01 - Status: FAILED"
-          jq --arg summary "$SUMMARY" '.messageFormat.blocks[3].text.text |= gsub("{{SUMMARY}}"; $summary)' jmeter-load-tests/config/slack-webhook.json > payload_failure.json
-          cat payload_failure.json
-
-      # Debug Slack Payload for Success Notification
-      - name: Debug Slack Payload (Success)
-        run: |
-          echo "Success Payload content:"
-          cat payload_success.json
-
-      # Debug Slack Payload for Failure Notification
-      - name: Debug Slack Payload (Failure)
-        run: |
-          echo "Failure Payload content:"
-          cat payload_failure.json
-
-      # Send Slack Notification on Success
-      - name: Send Slack Notification (Success)
+      - name: Send Slack Notification on Success
         if: success()  # Send if the job succeeded
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data @payload_success.json \
+            --data '{"text":"Test Plan: testPlan01 - Status: PASSED"}' \
             $SLACK_WEBHOOK_URL
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      # Send Slack Notification on Failure
-      - name: Send Slack Notification (Failure)
+      - name: Send Slack Notification on Failure
         if: failure()  # Send if the job failed
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data @payload_failure.json \
+            --data '{"text":"Test Plan: testPlan01 - Status: FAILED"}' \
             $SLACK_WEBHOOK_URL
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
