@@ -12,6 +12,7 @@ if (!webhookUrl) {
 
 // Log webhook URL pattern (safely)
 console.log(`Webhook URL length: ${webhookUrl.length}`);
+console.log('Slack Webhook URL:', webhookUrl);
 console.log(`Webhook URL pattern: https://hooks.slack.com/services/T***/B***/****`);
 
 // Load Slack configuration
